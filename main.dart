@@ -1,5 +1,5 @@
-import 'package:plugins/plugin.dart';
 import 'dart:isolate';
+import 'package:plugins/plugin.dart';
 
 Receiver recv;
 
@@ -34,26 +34,6 @@ void handle_command(data) {
 }
 
 void handle_message(Map<String, dynamic> data) {
-  void send(String command, Map<String, dynamic> args) {
-    var msg = {
-      "network": data['network'],
-      "command": command
-    };
-    msg.addAll(args);
-    recv.send(msg);
-  }
-
-  void raw(String line) => send("raw", {
-    "line": line
-  });
-
-  void reply(String message) {
-    send("message", {
-      "target": data["target"],
-      "message": message
-    });
-  }
-
   var message = "[${data['network']}] <-${data['from']}> ${data['message']}";
 
   recv.get("networks", {}).then((response) {

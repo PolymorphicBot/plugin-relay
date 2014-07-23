@@ -16,16 +16,17 @@ void main(List<String> args, port) {
     }
   });
   
-  /* Expose External API */
-  bot.conn.listenRequest((request) {
-    switch (request.command) {
-      case "enabled":
-        request.reply({"enabled": enabled});
-        break;
-    }
+  var requests = new RequestAdapter();
+  
+  requests.register("enabled", (request) {
+    request.reply({
+      "enabled": enabled
+    });
   });
   
-  bot.conn.listen((data) {
+  bot.handleRequest(requests.handle);
+  
+  bot.handleEvent((data) {
     switch (data['event']) {
       case "command":
         handle_command(data);

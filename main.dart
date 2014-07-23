@@ -7,12 +7,34 @@ void main(List<String> args, SendPort port) {
   print("[Relay] Loading");
   recv = new Receiver(port);
 
+  var enabled = true;
+  
+  recv.get("config", {}).then((response) {
+    var config = response["config"];
+    if (config.containsKey("relay")) {
+      var relay = config["relay"];
+      enabled = relay.containsKey("enabled") && !relay["enabled"];
+    }
+  });
+  
+  /* Expose External API */
+  recv.listenRequest((request) {
+    switch (request.command) {
+      case "enabled":
+        request.reply({"enabled": enabled});
+        break;
+    }
+  });
+  
   recv.listen((data) {
     switch (data['event']) {
       case "command":
         handle_command(data);
         break;
       case "message":
+        if (!enabled) {
+          break;
+        }
         handle_message(data);
         break;
     }

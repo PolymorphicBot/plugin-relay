@@ -1,15 +1,14 @@
-import 'dart:isolate';
-import 'package:plugins/plugin.dart';
+import 'package:polymorphic_bot/api.dart';
 
-Receiver recv;
+APIConnector bot;
 
-void main(List<String> args, SendPort port) {
+void main(List<String> args, port) {
   print("[Relay] Loading");
-  recv = new Receiver(port);
-
+  bot = new APIConnector(port);
+  
   var enabled = true;
   
-  recv.get("config", {}).then((response) {
+  bot.config.then((response) {
     var config = response["config"];
     if (config.containsKey("relay")) {
       var relay = config["relay"];
@@ -18,7 +17,7 @@ void main(List<String> args, SendPort port) {
   });
   
   /* Expose External API */
-  recv.listenRequest((request) {
+  bot.conn.listenRequest((request) {
     switch (request.command) {
       case "enabled":
         request.reply({"enabled": enabled});
@@ -26,7 +25,7 @@ void main(List<String> args, SendPort port) {
     }
   });
   
-  recv.listen((data) {
+  bot.conn.listen((data) {
     switch (data['event']) {
       case "command":
         handle_command(data);
@@ -42,15 +41,6 @@ void main(List<String> args, SendPort port) {
 }
 
 void handle_command(data) {
-  void reply(String message) {
-    recv.send({
-      "network": data["network"],
-      "target": data["target"],
-      "command": "message",
-      "message": message
-    });
-  }
-
   switch (data["command"]) {
   }
 }
@@ -58,17 +48,11 @@ void handle_command(data) {
 void handle_message(Map<String, dynamic> data) {
   var message = "[${data['network']}] <-${data['from']}> ${data['message']}";
 
-  recv.get("networks", {}).then((response) {
+  bot.get("networks").then((response) {
     var send_to = copy(response["networks"]);
     send_to.remove(data['network']);
     send_to.forEach((net) {
-      var msg = {
-        "network": net,
-        "target": data['target'],
-        "message": message,
-        "command": "message"
-      };
-      recv.send(msg);
+      bot.message(net, data['target'], message);
     });
   });
 }

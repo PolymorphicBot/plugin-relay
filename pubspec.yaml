@@ -3,3 +3,5 @@ version: 1.0.0
 description: Relay Plugin for PolymorphicBot
 dependencies:
   plugins: any
+  polymorphic_bot:
+    git: "git://github.com/PolymorphicBot/PolymorphicBot.git"

@@ -1,12 +1,15 @@
 import 'package:polymorphic_bot/api.dart';
 
-APIConnector bot;
+BotConnector bot;
+EventManager eventManager;
+bool enabled;
 
 void main(List<String> args, port) {
-  print("[Relay] Loading");
-  bot = new APIConnector(port);
+  print("[Relay] Loading Plugin");
+  bot = new BotConnector(port);
+  eventManager = bot.createEventManager();
   
-  var enabled = true;
+  enabled = true;
   
   bot.config.then((response) {
     var config = response["config"];
@@ -26,33 +29,56 @@ void main(List<String> args, port) {
   
   bot.handleRequest(requests.handle);
   
-  bot.handleEvent((data) {
-    switch (data['event']) {
-      case "command":
-        handle_command(data);
-        break;
-      case "message":
-        if (!enabled) {
-          break;
-        }
-        handle_message(data);
-        break;
-    }
+  eventManager.on("message").listen(handleMessage);
+  eventManager.on("join").listen(handleJoin);
+  eventManager.on("part").listen(handlePart);
+}
+
+void handleJoin(Map<String, dynamic> data) {
+  if (!enabled) {
+    return;
+  }
+  
+  String user = data['user'];
+  String network = data['network'];
+  
+  bot.get("networks").then((response) {
+    var sendTo = copy(response["networks"]);
+    sendTo.remove(data['network']);
+    sendTo.forEach((net) {
+      bot.message(net, data['target'], "[${network}] ${user} joined");
+    });
   });
 }
 
-void handle_command(data) {
-  switch (data["command"]) {
+void handlePart(Map<String, dynamic> data) {
+  if (!enabled) {
+    return;
   }
+  
+  String user = data['user'];
+  String network = data['network'];
+  
+  bot.get("networks").then((response) {
+    var sendTo = copy(response["networks"]);
+    sendTo.remove(data['network']);
+    sendTo.forEach((net) {
+      bot.message(net, data['target'], "[${network}] ${user} left");
+    });
+  });
 }
 
-void handle_message(Map<String, dynamic> data) {
+void handleMessage(Map<String, dynamic> data) {
+  if (!enabled) {
+    return;
+  }
+  
   var message = "[${data['network']}] <-${data['from']}> ${data['message']}";
 
   bot.get("networks").then((response) {
-    var send_to = copy(response["networks"]);
-    send_to.remove(data['network']);
-    send_to.forEach((net) {
+    var sendTo = copy(response["networks"]);
+    sendTo.remove(data['network']);
+    sendTo.forEach((net) {
       bot.message(net, data['target'], message);
     });
   });

@@ -1,13 +1,11 @@
 import 'package:polymorphic_bot/api.dart';
 
 BotConnector bot;
-EventManager eventManager;
 bool enabled;
 
-void main(List<String> args, port) {
+void main(List<String> args, Plugin plugin) {
   print("[Relay] Loading Plugin");
-  bot = new BotConnector(port);
-  eventManager = bot.createEventManager();
+  bot = plugin.getBot();
   
   enabled = true;
   
@@ -29,9 +27,9 @@ void main(List<String> args, port) {
   
   bot.handleRequest(requests.handle);
   
-  eventManager.on("message").listen(handleMessage);
-  eventManager.on("join").listen(handleJoin);
-  eventManager.on("part").listen(handlePart);
+  bot.on("message").listen(handleMessage);
+  bot.on("join").listen(handleJoin);
+  bot.on("part").listen(handlePart);
 }
 
 void handleJoin(Map<String, dynamic> data) {

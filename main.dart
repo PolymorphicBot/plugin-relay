@@ -1,9 +1,11 @@
 import 'package:polymorphic_bot/api.dart';
 
 BotConnector bot;
+Plugin plugin;
 bool enabled;
 
-void main(List<String> args, Plugin plugin) {
+void main(List<String> args, Plugin myPlugin) {
+  plugin = myPlugin;
   print("[Relay] Loading Plugin");
   bot = plugin.getBot();
   
@@ -17,19 +19,15 @@ void main(List<String> args, Plugin plugin) {
     }
   });
   
-  var requests = new RequestAdapter();
-  
-  requests.register("enabled", (request) {
+  plugin.addRemoteMethod("enabled", (request) {
     request.reply({
       "enabled": enabled
     });
   });
   
-  bot.handleRequest(requests.handle);
-  
-  bot.on("message").listen(handleMessage);
-  bot.on("join").listen(handleJoin);
-  bot.on("part").listen(handlePart);
+  plugin.on("message").listen(handleMessage);
+  plugin.on("join").listen(handleJoin);
+  plugin.on("part").listen(handlePart);
 }
 
 void handleJoin(Map<String, dynamic> data) {
@@ -40,7 +38,7 @@ void handleJoin(Map<String, dynamic> data) {
   String user = data['user'];
   String network = data['network'];
   
-  bot.get("networks").then((response) {
+  plugin.get("networks").then((response) {
     var sendTo = copy(response["networks"]);
     sendTo.remove(data['network']);
     sendTo.forEach((net) {
@@ -57,7 +55,7 @@ void handlePart(Map<String, dynamic> data) {
   String user = data['user'];
   String network = data['network'];
   
-  bot.get("networks").then((response) {
+  plugin.get("networks").then((response) {
     var sendTo = copy(response["networks"]);
     sendTo.remove(data['network']);
     sendTo.forEach((net) {
@@ -73,7 +71,7 @@ void handleMessage(Map<String, dynamic> data) {
   
   var message = "[${data['network']}] <-${data['from']}> ${data['message']}";
 
-  bot.get("networks").then((response) {
+  plugin.get("networks").then((response) {
     var sendTo = copy(response["networks"]);
     sendTo.remove(data['network']);
     sendTo.forEach((net) {

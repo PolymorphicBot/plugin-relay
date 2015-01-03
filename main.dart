@@ -11,71 +11,71 @@ void main(List<String> args, Plugin myPlugin) {
   
   enabled = true;
   
-  bot.config.then((response) {
-    var config = response["config"];
+  bot.getConfig().then((config) {
     if (config.containsKey("relay")) {
       var relay = config["relay"];
       enabled = relay.containsKey("enabled") && !relay["enabled"];
     }
   });
   
-  plugin.addRemoteMethod("enabled", (request) {
-    request.reply({
-      "enabled": enabled
-    });
+  plugin.addRemoteMethod("isEnabled", (request) {
+    request.reply(enabled);
   });
   
-  plugin.on("message").listen(handleMessage);
-  plugin.on("join").listen(handleJoin);
-  plugin.on("part").listen(handlePart);
+  bot.onMessage(handleMessage);
+  bot.onJoin(handleJoin);
+  bot.onPart(handlePart);
 }
 
-void handleJoin(Map<String, dynamic> data) {
+void handleJoin(JoinEvent event) {
   if (!enabled) {
     return;
   }
   
-  String user = data['user'];
-  String network = data['network'];
+  String user = event.user;
+  String network = event.network;
+  String channel = event.channel;
   
-  plugin.get("networks").then((response) {
-    var sendTo = copy(response["networks"]);
-    sendTo.remove(data['network']);
+  bot.getNetworks().then((networks) {
+    var sendTo = copy(networks);
+    sendTo.remove(network);
     sendTo.forEach((net) {
-      bot.sendMessage(net, data['channel'], "[${network}] ${user} joined");
+      bot.sendMessage(net, channel, "[${network}] ${user} joined");
     });
   });
 }
 
-void handlePart(Map<String, dynamic> data) {
+void handlePart(PartEvent event) {
   if (!enabled) {
     return;
   }
   
-  String user = data['user'];
-  String network = data['network'];
+  String user = event.user;
+  String network = event.network;
+  String channel = event.channel;
   
-  plugin.get("networks").then((response) {
-    var sendTo = copy(response["networks"]);
-    sendTo.remove(data['network']);
+  bot.getNetworks().then((networks) {
+    var sendTo = copy(networks);
+    sendTo.remove(network);
     sendTo.forEach((net) {
-      bot.sendMessage(net, data['channel'], "[${network}] ${user} left");
+      bot.sendMessage(net, channel, "[${network}] ${user} left");
     });
   });
 }
 
-void handleMessage(Map<String, dynamic> data) {
+void handleMessage(MessageEvent event) {
   if (!enabled) {
     return;
   }
   
-  var message = "[${data['network']}] <-${data['from']}> ${data['message']}";
+  var message = "[${event.network}] <-${event.from}> ${event.message}";
 
-  plugin.get("networks").then((response) {
-    var sendTo = copy(response["networks"]);
-    sendTo.remove(data['network']);
-    sendTo.forEach((net) {
-      bot.sendMessage(net, data['target'], message);
+  bot.getNetworks().then((networks) {
+    var sendTo = copy(networks);
+    
+    sendTo.remove(event.network);
+    sendTo.forEach((network) {
+      bot.sendMessage(network, event.target, message);
     });
   });
 }

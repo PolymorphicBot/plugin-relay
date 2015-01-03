@@ -42,7 +42,7 @@ void handleJoin(Map<String, dynamic> data) {
     var sendTo = copy(response["networks"]);
     sendTo.remove(data['network']);
     sendTo.forEach((net) {
-      bot.message(net, data['channel'], "[${network}] ${user} joined");
+      bot.sendMessage(net, data['channel'], "[${network}] ${user} joined");
     });
   });
 }
@@ -59,7 +59,7 @@ void handlePart(Map<String, dynamic> data) {
     var sendTo = copy(response["networks"]);
     sendTo.remove(data['network']);
     sendTo.forEach((net) {
-      bot.message(net, data['channel'], "[${network}] ${user} left");
+      bot.sendMessage(net, data['channel'], "[${network}] ${user} left");
     });
   });
 }
@@ -75,7 +75,7 @@ void handleMessage(Map<String, dynamic> data) {
     var sendTo = copy(response["networks"]);
     sendTo.remove(data['network']);
     sendTo.forEach((net) {
-      bot.message(net, data['target'], message);
+      bot.sendMessage(net, data['target'], message);
     });
   });
 }

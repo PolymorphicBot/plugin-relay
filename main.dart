@@ -14,7 +14,7 @@ void main(List<String> args, Plugin myPlugin) {
   bot.getConfig().then((config) {
     if (config.containsKey("relay")) {
       var relay = config["relay"];
-      enabled = relay.containsKey("enabled") && !relay["enabled"];
+      enabled = relay.containsKey("enabled") ? relay["enabled"] : true;
     }
   });
   

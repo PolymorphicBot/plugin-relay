@@ -1,32 +1,20 @@
 import 'package:polymorphic_bot/api.dart';
 
+void main(List<String> args, Plugin p) => p.load();
+
+@BotInstance()
 BotConnector bot;
+@PluginInstance()
 Plugin plugin;
-bool enabled;
+bool enabled = true;
 
-void main(List<String> args, Plugin myPlugin) {
-  plugin = myPlugin;
-  print("[Relay] Loading Plugin");
-  bot = plugin.getBot();
-  
-  enabled = true;
-  
-  bot.getConfig().then((config) {
-    if (config.containsKey("relay")) {
-      var relay = config["relay"];
-      enabled = relay.containsKey("enabled") ? relay["enabled"] : true;
-    }
-  });
-  
-  plugin.addRemoteMethod("isEnabled", (request) {
-    request.reply(enabled);
-  });
-  
-  bot.onMessage(handleMessage);
-  bot.onJoin(handleJoin);
-  bot.onPart(handlePart);
-}
+@Start()
+start() => print("[Relay] Loading Plugin");
 
+@RemoteMethod()
+void isEnabled(RemoteCall call) => call.reply(enabled);
+
+@OnJoin()
 void handleJoin(JoinEvent event) {
   if (!enabled) {
     return;
@@ -45,6 +33,7 @@ void handleJoin(JoinEvent event) {
   });
 }
 
+@OnPart()
 void handlePart(PartEvent event) {
   if (!enabled) {
     return;
@@ -63,6 +52,7 @@ void handlePart(PartEvent event) {
   });
 }
 
+@OnMessage()
 void handleMessage(MessageEvent event) {
   if (!enabled) {
     return;
